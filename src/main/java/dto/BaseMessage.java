@@ -1,8 +1,8 @@
+package dto;
+
 /****************************
  * Created by Michael Marolt *
  *****************************/
 
-public interface Callback<T> {
-
-    void callback(T argument);
+public class BaseMessage {
 }

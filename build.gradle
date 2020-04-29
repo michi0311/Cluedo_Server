@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.esotericsoftware:kryonet:2.22.0-RC1'
+    
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
