@@ -1,7 +1,10 @@
+package kryonet;
+
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import dto.BaseMessage;
+import dto.RequestDTO;
+import jdk.internal.jline.internal.Log;
 
 import java.io.IOException;
 
@@ -11,7 +14,7 @@ import java.io.IOException;
 
 public class ServerKryonet implements NetworkServer {
     private Server server;
-    private Callback<BaseMessage> messageCallback;
+    private Callback<RequestDTO> messageCallback;
 
     public ServerKryonet() {
         server = new Server();
@@ -24,31 +27,37 @@ public class ServerKryonet implements NetworkServer {
         server.addListener(new Listener() {
             @Override
             public void received(Connection connection, Object object) {
-                if (messageCallback != null && object instanceof BaseMessage)
-                    messageCallback.callback((BaseMessage) object);
+                if (object instanceof RequestDTO) {
+                    handleRequest(connection,object);
+                }
             }
         });
     }
 
+    private void handleRequest(Connection connection, Object object) {
+        Log.debug("Received Object:" + object.getClass().toString());
+        broadcastMessage(object);
+    }
+
     @Override
-    public void registerCallback(Callback<BaseMessage> callback) {
+    public void registerCallback(Callback<RequestDTO> callback) {
         this.messageCallback = callback;
     }
 
     @Override
-    public void broadcastMessage(BaseMessage message) {
+    public void broadcastMessage(RequestDTO request) {
         for (Connection connection: server.getConnections()) {
-            sendMessageToClient(message, connection);
+            sendMessageToClient(request, connection);
         }
     }
 
-    private void sendMessageToClient(final BaseMessage message, final Connection connection) {
+    private void sendMessageToClient(final RequestDTO request, final Connection connection) {
         System.out.println("Send Message To Client");
 
         new Thread("send") {
             @Override
             public void run() {
-                connection.sendTCP(message);
+                connection.sendTCP(request);
             }
         }.start();
     }

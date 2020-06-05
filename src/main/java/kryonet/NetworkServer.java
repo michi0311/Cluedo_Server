@@ -1,5 +1,10 @@
+package kryonet;
+
 import java.io.IOException;
 import dto.BaseMessage;
+import dto.RequestDTO;
+import kryonet.Callback;
+
 /****************************
  * Created by Michael Marolt *
  *****************************/
@@ -8,7 +13,7 @@ public interface NetworkServer {
 
     void start() throws IOException;
 
-    void registerCallback(Callback<BaseMessage> callback);
+    void registerCallback(Callback<RequestDTO> callback);
 
-    void broadcastMessage(BaseMessage message);
+    void broadcastMessage(RequestDTO message);
 }

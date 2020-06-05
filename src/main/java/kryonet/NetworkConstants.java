@@ -1,3 +1,5 @@
+package kryonet;
+
 /****************************
  * Created by Michael Marolt *
  *****************************/

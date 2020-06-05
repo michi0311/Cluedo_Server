@@ -1,5 +1,7 @@
 import dto.BaseMessage;
-import dto.TextMessage;
+import dto.RequestDTO;
+import kryonet.Callback;
+import kryonet.ServerKryonet;
 
 import java.net.InetAddress;
 import java.io.IOException;
@@ -26,17 +28,16 @@ public class Main {
 
 
         ServerKryonet server = new ServerKryonet();
-        server.registerClass(BaseMessage.class);
-        server.registerClass(TextMessage.class);
+        server.registerClass(RequestDTO.class);
         try {
             server.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        server.registerCallback(new Callback<BaseMessage>() {
+        server.registerCallback(new Callback<RequestDTO>() {
             @Override
-            public void callback(BaseMessage argument) {
+            public void callback(RequestDTO argument) {
                 server.broadcastMessage(argument);
             }
         });
