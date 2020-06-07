@@ -1,5 +1,4 @@
-import dto.BaseMessage;
-import dto.RequestDTO;
+import dto.*;
 import kryonet.Callback;
 import kryonet.ServerKryonet;
 
@@ -26,9 +25,14 @@ public class Main {
             e.printStackTrace();
         }
 
-
         ServerKryonet server = new ServerKryonet();
-        server.registerClass(RequestDTO.class);
+        server.registerClass(RequestDTO.class,1);
+        server.registerClass(RegisterClassDTO.class,2);
+        server.registerClass(SerializedDTO.class,3);
+        //server.registerClass(Class.class);
+        //server.registerClass(Object.class);
+        //server.registerClass(TextMessage.class);
+
         try {
             server.start();
         } catch (IOException e) {
