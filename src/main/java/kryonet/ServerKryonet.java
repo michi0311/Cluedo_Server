@@ -8,13 +8,16 @@ import dto.RequestDTO;
 import dto.SerializedDTO;
 import dto.TextMessage;
 
+
 import java.io.IOException;
+import java.util.LinkedList;
 
 /****************************
  * Created by Michael Marolt *
  *****************************/
 
 public class ServerKryonet implements NetworkServer {
+    private LinkedList<GameRoom> gameRoomLinkedList;
     private Server server;
     private Callback<RequestDTO> messageCallback;
 

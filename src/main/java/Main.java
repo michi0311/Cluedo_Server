@@ -29,6 +29,7 @@ public class Main {
         server.registerClass(RequestDTO.class,1);
         server.registerClass(RegisterClassDTO.class,2);
         server.registerClass(SerializedDTO.class,3);
+        server.registerClass(NewGameRoomRequestDTO.class, 4);
         //server.registerClass(Class.class);
         //server.registerClass(Object.class);
         //server.registerClass(TextMessage.class);
