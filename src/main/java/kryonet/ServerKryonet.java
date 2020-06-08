@@ -3,10 +3,7 @@ package kryonet;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import dto.RegisterClassDTO;
-import dto.RequestDTO;
-import dto.SerializedDTO;
-import dto.TextMessage;
+import dto.*;
 
 
 import java.io.IOException;
@@ -31,6 +28,8 @@ public class ServerKryonet implements NetworkServer {
         server.start();
         server.bind(NetworkConstants.TCP_PORT,NetworkConstants.UDP_PORT);
 
+        gameRoomLinkedList = new LinkedList<>();
+
         server.addListener(new Listener() {
             @Override
             public void received(Connection connection, Object object) {
@@ -47,6 +46,8 @@ public class ServerKryonet implements NetworkServer {
         System.out.println("Received Object:" + object.getClass().toString());
         if (object instanceof TextMessage) {
             System.out.println(((TextMessage) object).toString());
+        } else if (object instanceof NewGameRoomRequestDTO) {
+            handleNewGameRoomRequest(connection, (NewGameRoomRequestDTO) object);
         }
 
         else if (object instanceof RegisterClassDTO) {
@@ -54,6 +55,22 @@ public class ServerKryonet implements NetworkServer {
         }
 
         //broadcastMessageTest(object);
+    }
+
+    private void handleNewGameRoomRequest(Connection connection, NewGameRoomRequestDTO newGameRoomRequestDTO) {
+        ClientData host = new ClientData();
+        host.setId();
+        host.setConnection(connection);
+        host.setUsername(newGameRoomRequestDTO.getUsername());
+
+        GameRoom newRoom = new GameRoom(host);
+        gameRoomLinkedList.add(newRoom);
+
+        System.out.println("New Room initialized: Host: " + host.getUsername() + "Room: " + newRoom.getRoomID());
+
+        NewGameRoomRequestDTO response = new NewGameRoomRequestDTO();
+        response.setCreatedRoom("Room" + newRoom.getRoomID());
+        sendMessageToClient(response,connection);
     }
 
     private void handleClassRegistration(Connection connection, RegisterClassDTO registerClassDTO) {
