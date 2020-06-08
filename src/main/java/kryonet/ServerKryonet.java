@@ -48,6 +48,8 @@ public class ServerKryonet implements NetworkServer {
             System.out.println(((TextMessage) object).toString());
         } else if (object instanceof NewGameRoomRequestDTO) {
             handleNewGameRoomRequest(connection, (NewGameRoomRequestDTO) object);
+        } else if (object instanceof RoomsDTO) {
+            handleRoomRequest(connection, (RoomsDTO) object);
         }
 
         else if (object instanceof RegisterClassDTO) {
@@ -71,6 +73,21 @@ public class ServerKryonet implements NetworkServer {
         NewGameRoomRequestDTO response = new NewGameRoomRequestDTO();
         response.setCreatedRoom("Room" + newRoom.getRoomID());
         sendMessageToClient(response,connection);
+    }
+
+    private void handleRoomRequest(Connection connection, RoomsDTO roomsDTO) {
+        if (roomsDTO.getGameRooms() == null && roomsDTO.getSelectedRoom() == 0) {
+            System.out.println("WTF1");
+            RoomsDTO availableRooms = new RoomsDTO();
+
+            LinkedList<String> availableRoomsList = new LinkedList<>();
+            for (GameRoom gm: gameRoomLinkedList) {
+                availableRoomsList.add("Room " + gm.getRoomID() + " (" + (gm.getClientList().size() + 1) + "/6)" );
+            }
+            availableRooms.setGameRooms(availableRoomsList);
+
+            sendMessageToClient(availableRooms,connection);
+        }
     }
 
     private void handleClassRegistration(Connection connection, RegisterClassDTO registerClassDTO) {
