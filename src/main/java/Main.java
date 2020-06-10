@@ -35,6 +35,9 @@ public class Main {
         server.registerClass(NewGameRoomRequestDTO.class, 4);
         server.registerClass(RoomsDTO.class,5);
         server.registerClass(LinkedList.class,6);
+        server.registerClass(UserNameRequestDTO.class,7);
+        server.registerClass(SendToOnePlayerDTO.class, 8);
+        server.registerClass(BroadcastDTO.class,9);
         //server.registerClass(Class.class);
         //server.registerClass(Object.class);
         //server.registerClass(TextMessage.class);

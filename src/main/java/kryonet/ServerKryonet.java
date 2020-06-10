@@ -7,6 +7,7 @@ import dto.*;
 
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 /****************************
@@ -14,7 +15,9 @@ import java.util.LinkedList;
  *****************************/
 
 public class ServerKryonet implements NetworkServer {
-    private LinkedList<GameRoom> gameRoomLinkedList;
+    //private LinkedList<GameRoom> gameRoomLinkedList;
+    private HashMap<Integer, GameRoom> gameRoomHashMap;
+    private HashMap<Connection, Integer> clientToRoomHashMap;
     private Server server;
     private Callback<RequestDTO> messageCallback;
 
@@ -28,7 +31,9 @@ public class ServerKryonet implements NetworkServer {
         server.start();
         server.bind(NetworkConstants.TCP_PORT,NetworkConstants.UDP_PORT);
 
-        gameRoomLinkedList = new LinkedList<>();
+        //gameRoomLinkedList = new LinkedList<>();
+        gameRoomHashMap = new HashMap<>();
+        clientToRoomHashMap = new HashMap<>();
 
         server.addListener(new Listener() {
             @Override
@@ -50,6 +55,10 @@ public class ServerKryonet implements NetworkServer {
             handleNewGameRoomRequest(connection, (NewGameRoomRequestDTO) object);
         } else if (object instanceof RoomsDTO) {
             handleRoomRequest(connection, (RoomsDTO) object);
+        } else if (object instanceof BroadcastDTO) {
+            handleBroadcastRequest(connection, (BroadcastDTO) object);
+        } else if (object instanceof SendToOnePlayerDTO) {
+            handleSendToOnePlayerRequest(connection, (SendToOnePlayerDTO) object);
         }
 
         else if (object instanceof RegisterClassDTO) {
@@ -66,12 +75,14 @@ public class ServerKryonet implements NetworkServer {
         host.setUsername(newGameRoomRequestDTO.getUsername());
 
         GameRoom newRoom = new GameRoom(host);
-        gameRoomLinkedList.add(newRoom);
+        gameRoomHashMap.put(newRoom.getRoomID(), newRoom);
+        clientToRoomHashMap.put(connection, newRoom.getRoomID());
+        //gameRoomLinkedList.add(newRoom);
 
-        System.out.println("New Room initialized: Host: " + host.getUsername() + "Room: " + newRoom.getRoomID());
+        System.out.println("New Room initialized: Host: " + host.getUsername() + " Room: " + newRoom.getRoomID());
 
         NewGameRoomRequestDTO response = new NewGameRoomRequestDTO();
-        response.setCreatedRoom("Room" + newRoom.getRoomID());
+        response.setCreatedRoom("Room " + newRoom.getRoomID());
         sendMessageToClient(response,connection);
     }
 
@@ -81,13 +92,62 @@ public class ServerKryonet implements NetworkServer {
             RoomsDTO availableRooms = new RoomsDTO();
 
             LinkedList<String> availableRoomsList = new LinkedList<>();
-            for (GameRoom gm: gameRoomLinkedList) {
+            for (GameRoom gm: gameRoomHashMap.values()) {
                 availableRoomsList.add("Room " + gm.getRoomID() + " (" + (gm.getClientList().size() + 1) + "/6)" );
             }
             availableRooms.setGameRooms(availableRoomsList);
 
             sendMessageToClient(availableRooms,connection);
+        } else if (roomsDTO.getSelectedRoom() != 0) {
+            int selectedRoom = roomsDTO.getSelectedRoom();
+            String username = roomsDTO.getUsername();
+
+            ClientData client = new ClientData();
+            client.setUsername(username);
+            client.setConnection(connection);
+            client.setId();
+
+            GameRoom room = gameRoomHashMap.get(selectedRoom);
+            room.addClient(client);
+
+            clientToRoomHashMap.put(connection, selectedRoom);
+            System.out.println("Client " + client.getUsername() + " added to GameRoom No " + room.getRoomID());
+
+            UserNameRequestDTO userNameRequestDTO = new UserNameRequestDTO();
+            userNameRequestDTO.setId(client.getId());
+            userNameRequestDTO.setUsername(client.getUsername());
+
+            //send Message to host from Room
+            sendMessageToClient(userNameRequestDTO,room.getHost().getConnection());
         }
+    }
+
+    private void handleBroadcastRequest(Connection connection, BroadcastDTO broadcastDTO) {
+        //get the gameRoom where the user plays
+        GameRoom gameRoom = gameRoomHashMap.get(clientToRoomHashMap.get(connection));
+
+        // this only sends the object to the clients, not the Host
+        for (ClientData client: gameRoom.getClientList()) {
+            sendMessageToClient(broadcastDTO,client.getConnection());
+        }
+    }
+
+    private void handleSendToOnePlayerRequest(Connection connection, SendToOnePlayerDTO sendToOnePlayerDTO) {
+        GameRoom gameRoom = gameRoomHashMap.get(clientToRoomHashMap.get(connection));
+
+        //set Sending ID
+        for (ClientData client: gameRoom.getClientList()) {
+            if (client.getConnection() == connection) {
+                sendToOnePlayerDTO.setSendingPlayerID(client.getId());
+            }
+        }
+
+        if (sendToOnePlayerDTO.isToHost()) {
+            sendMessageToClient(sendToOnePlayerDTO, gameRoom.getHost().getConnection());
+            return;
+        }
+
+
     }
 
     private void handleClassRegistration(Connection connection, RegisterClassDTO registerClassDTO) {
