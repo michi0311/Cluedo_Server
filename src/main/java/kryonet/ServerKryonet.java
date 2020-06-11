@@ -22,7 +22,7 @@ public class ServerKryonet implements NetworkServer {
     private Callback<RequestDTO> messageCallback;
 
     public ServerKryonet() {
-        server = new Server();
+        server = new Server(16384, 4096);
     }
 
 
@@ -83,6 +83,7 @@ public class ServerKryonet implements NetworkServer {
 
         NewGameRoomRequestDTO response = new NewGameRoomRequestDTO();
         response.setCreatedRoom("Room " + newRoom.getRoomID());
+        response.setHostID(host.getId());
         sendMessageToClient(response,connection);
     }
 
@@ -145,6 +146,12 @@ public class ServerKryonet implements NetworkServer {
         if (sendToOnePlayerDTO.isToHost()) {
             sendMessageToClient(sendToOnePlayerDTO, gameRoom.getHost().getConnection());
             return;
+        } else {
+            for (ClientData client: gameRoom.getClientList()) {
+                if (client.getId() == sendToOnePlayerDTO.getReceivingPlayerID()) {
+                    sendMessageToClient(sendToOnePlayerDTO, client.getConnection());
+                }
+            }
         }
 
 
