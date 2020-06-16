@@ -18,7 +18,7 @@ public class ClientData {
     }
 
     public void setId() {
-        this.id = id++;
+        this.id = currentID++;
     }
 
     public String getUsername() {

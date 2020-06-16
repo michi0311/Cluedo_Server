@@ -47,7 +47,13 @@ public class ServerKryonet implements NetworkServer {
     }
 
     private void handleRequest(Connection connection, Object object) {
-
+        for (GameRoom room: gameRoomHashMap.values()) {
+            String playerInRoom ="";
+            for (ClientData c : room.getClientList()) {
+                playerInRoom = playerInRoom + c.getId() + " ";
+            }
+            System.out.println("Room ID: " + room.getRoomID() + "Players: " + playerInRoom + " " + room.getHost().getId());
+        }
         System.out.println("Received Object:" + object.getClass().toString());
         if (object instanceof TextMessage) {
             System.out.println(((TextMessage) object).toString());
@@ -126,10 +132,18 @@ public class ServerKryonet implements NetworkServer {
     private void handleBroadcastRequest(Connection connection, BroadcastDTO broadcastDTO) {
         //get the gameRoom where the user plays
         GameRoom gameRoom = gameRoomHashMap.get(clientToRoomHashMap.get(connection));
+        LinkedList<ClientData> clients = gameRoom.getClientList();
+        //clients.add(gameRoom.getHost());
+        ClientData host = gameRoom.getHost();
 
         // this only sends the object to the clients, not the Host
-        for (ClientData client: gameRoom.getClientList()) {
-            sendMessageToClient(broadcastDTO,client.getConnection());
+        for (ClientData client: clients) {
+            if (client.getConnection() != connection) {
+                sendMessageToClient(broadcastDTO,client.getConnection());
+            }
+        }
+        if (host.getConnection()!=connection) {
+            sendMessageToClient(broadcastDTO,host.getConnection());
         }
     }
 

@@ -47,12 +47,5 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        server.registerCallback(new Callback<RequestDTO>() {
-            @Override
-            public void callback(RequestDTO argument) {
-                server.broadcastMessage(argument);
-            }
-        });
     }
 }
